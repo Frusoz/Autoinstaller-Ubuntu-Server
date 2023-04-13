@@ -1,0 +1,160 @@
+#cloud-config
+
+autoinstall:
+
+  version: 1
+
+  locale: en_US.UTF-8
+
+  identity:
+    hostname: newdmi
+    password: $y$j9T$9zEi2fh7l1wkSqT1XRON/.$5n7nzPpfIhXTQYly3EIsrIuGW8JdkU.lRNsSzZKLrR9
+    username: sysadmin
+
+  network:
+    version: 2
+    renderer: networkd
+    ethernets:
+      eth0:
+        match:
+          name: en*
+        dhcp4: yes
+      eth1:
+        match:
+          name: eth*
+        dhcp4: yes
+
+  storage:
+    config:
+      - id: disk-sda
+        type: disk
+        ptable: gpt
+        preserve: false
+        grub_device: true
+        wipe: superblock-recursive
+
+      - id: grub-partition
+        type: partition
+        device: disk-sda
+        size: 4M
+        flag: bios_grub
+        preserve: false
+        number: 1
+
+      - id: boot-partition
+        type: partition
+        device: disk-sda
+        size: 1G
+        preserve: false
+        number: 2
+
+      - id: boot-efi-partition
+        type: partition
+        device: disk-sda
+        grub_device: UEFI
+        size: 1G
+        preserve: false
+        number: 3
+
+      - id: rescue-partition
+        type: partition
+        device: disk-sda
+        size: 3G
+        preserve: false
+        number: 4
+
+      - id: root-partition
+        type: partition
+        device: disk-sda
+        size: -1
+        preserve: false
+        number: 5
+
+      - id: root-vg
+        name: VG_root
+        type: lvm_volgroup
+        preserve: false
+        devices:
+         - root-partition
+
+      - id: lvm_root_partition
+        name: root
+        type: lvm_partition
+        volgroup: root-vg
+        size: -1
+        preserve: false
+
+      - id: fs-boot
+        fstype: xfs
+        volume: boot-partition
+        type: format
+        preserve: false
+
+      - id: fs-efi-boot
+        fstype: fat32
+        volume: boot-efi-partition
+        type: format
+        preserve: false
+
+      - id: fs-root
+        fstype: xfs
+        volume: lvm_root_partition
+        type: format
+        preserve: false
+
+      - id: mount-boot
+        path: /boot
+        type: mount
+        device: fs-boot
+
+      - id: mount-efi-boot
+        path: /boot/efi
+        type: mount
+        device: fs-efi-boot
+
+      - id: mount-root
+        path: /
+        type: mount
+        device: fs-root
+
+  keyboard:
+    layout: it
+
+  ssh:
+    install-server: yes
+
+  #proxy: http://100.127.199.9:3128/ # Elmec Proxy for system packages
+
+  apt:
+    preserve_sources_list: false
+    geoip: true
+    primary:
+      - arches: [default]
+        uri: http://archive.ubuntu.com/ubuntu
+    conf: |
+      APT {
+        Get {
+          Assume-Yes "true";
+          Fix-Broken "true";
+        };
+      };
+    sources:
+      #elmec-dmi-setup:
+      #  source: "deb [trusted=yes] https://repo.automation.elmec.com/linux/debian/ elmec main"
+      #Add local repository for Elmec packages (elmec-dmi-setup, openvpn, bird)
+      elmec-package:
+        source: "deb [trusted=yes] file:/opt/elmec-packages/ ./"
+
+  update: true
+
+  packages:
+    - elmec-dmi-setup
+  
+  early-commands:
+    - |
+      if [ -e "/sys/firmware/efi" ]; then
+        sed -i -e "s/grub_device: UEFI/grub_device: true/" /autoinstall.yaml
+      else
+        sed -i -e "s/grub_device: UEFI/grub_device: false/" /autoinstall.yaml
+      fi
+      true
