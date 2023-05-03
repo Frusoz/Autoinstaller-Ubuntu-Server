@@ -10,16 +10,16 @@ iso_build:
     - apt install -y curl xorriso libarchive-tools squashfs-tools dpkg-dev
     - mkdir workdir
     - cp -r cloudinit/ workdir/
-    - cp -r elmec-packages/ workdir/
+    - cp -r packages/ workdir/
     - cd workdir
     - curl -sSLO https://releases.ubuntu.com/${UBUNTU_VERSION}/ubuntu-${UBUNTU_VERSION}-live-server-amd64.iso
     - mkdir iso_ext 
     - bsdtar -C iso_ext -xf ubuntu-${UBUNTU_VERSION}-live-server-amd64.iso
     - unsquashfs iso_ext/casper/ubuntu-server-minimal.squashfs
-    - cd elmec-packages/
+    - cd packages/
     - dpkg-scanpackages . > ./Packages
     - cd ..
-    - cp -r elmec-packages/ squashfs-root/opt/
+    - cp -r packages/ squashfs-root/opt/
     - chmod +w iso_ext/casper/ubuntu-server-minimal.manifest
     - chroot squashfs-root/ dpkg-query -W --showformat='${Package} ${Version}\n' > iso_ext/casper/ubuntu-server-minimal.manifest
     - rm -f iso_ext/casper/ubuntu-server-minimal.squashfs
@@ -36,7 +36,7 @@ iso_build:
     - sed -i -e "s/set timeout=30/set timeout=5/" iso_ext/boot/grub/grub.cfg
     - sed -i '7 i\\nmenuentry "Ubuntu Autoinstall" {\n   set gfxpayload=keep\n   linux  /casper/vmlinuz quiet autoinstall ds=nocloud\\;s=/cdrom/cloudinit/ ---\n   initrd /casper/initrd\n}' iso_ext/boot/grub/grub.cfg
     - xorriso -as mkisofs --modification-date='2021101314195100' --grub2-mbr --interval:local_fs:0s-15s:zero_mbrpt,zero_gpt:"ubuntu-${UBUNTU_VERSION}-live-server-amd64.iso" --protective-msdos-label -partition_cyl_align off -partition_offset 16 --mbr-force-bootable -append_partition 2 28732ac11ff8d211ba4b00a0c93ec93b --interval:local_fs:2470124d-2478587d::"ubuntu-${UBUNTU_VERSION}-live-server-amd64.iso" -part_like_isohybrid -iso_mbr_part_type a2a0d0ebe5b9334487c068b6b72699c7 -c '/boot.catalog' -b '/boot/grub/i386-pc/eltorito.img' -no-emul-boot -boot-load-size 4 -boot-info-table --grub2-boot-info -eltorito-alt-boot -e '--interval:appended_partition_2_start_617531s_size_8464d:all::' -no-emul-boot -boot-load-size 8464 -isohybrid-gpt-basdat -o ubuntu-autoinstall.iso -V 'Ubuntu autoinstall' iso_ext/
-    - curl -S -u${WEBDAV_USER}:${WEBDAV_PASS} -T ubuntu-autoinstall.iso http://repo.automation.elmec.com/webdav/linux/ubuntu/Elmec-DMI-Ubuntu-${UBUNTU_VERSION}-${CI_BUILD_TAG}-Installer.iso
+    - curl -S -u${WEBDAV_USER}:${WEBDAV_PASS} -T ubuntu-autoinstall.iso http://repo.automation.****.com/webdav/linux/ubuntu/****-***-Ubuntu-${UBUNTU_VERSION}-${CI_BUILD_TAG}-Installer.iso
   only:
     - tags
 

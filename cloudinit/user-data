@@ -143,7 +143,7 @@ autoinstall:
       #  source: "deb [trusted=yes] https://repo.automation.elmec.com/linux/debian/ elmec main"
       #Add local repository for Elmec packages (elmec-dmi-setup, openvpn, bird)
       elmec-package:
-        source: "deb [trusted=yes] file:/opt/elmec-packages/ ./"
+        source: "deb [trusted=yes] file:/opt/packages/ ./"
 
   update: true
 
